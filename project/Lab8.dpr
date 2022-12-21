@@ -15,6 +15,7 @@ type
   TDictArray = array [1 .. MAX_LENGTH, 1 .. MAX_COUNT] of string;
   TCountArray = array [1 .. MAX_LENGTH] of integer;
   TWordsArray = array [1..MAX_LENGTH] of string;
+  TLanguage = (en, ru);
 
   TDict = record
   var
@@ -22,6 +23,43 @@ type
     count: TCountArray;
   end;
 
+
+procedure clearConsole;
+var
+  cursor: COORD;
+  r: cardinal;
+begin
+  r := 300;
+  cursor.X := 0;
+  cursor.Y := 0;
+  FillConsoleOutputCharacter(GetStdHandle(STD_OUTPUT_HANDLE), ' ', 80 * r, cursor, r);
+  SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), cursor);
+end;
+
+
+function readLanguage(): TLanguage;
+var
+  chosen: boolean;
+  lang: string;
+begin
+  chosen := false;
+  while not chosen do begin
+    clearConsole();
+    writeln('Пожалуйста, выберите язык:');
+    writeln('Please, choose language:');
+    writeln('Русский - ru');
+    writeln('English - en');
+    readln(lang);
+    if lang = 'en' then begin
+     result := en;
+     chosen := true;
+    end
+    else if lang = 'ru' then begin
+      result := ru;
+      chosen := true;
+    end;
+  end;
+end;
 
 
 function splitBy(str: string; separator: char): TWordsArray;
@@ -175,6 +213,7 @@ begin
 //  SetConsoleCP(1251);
 //  SetConsoleOutputCP(1251);
 //  randomize;
+//  readLanguage();
 //  dict := readDict('../../../dict-en.txt');
 //  // 'C:\Универ\Lab8-blind-printing\dict-en.txt'
 //  for i := 1 to 100 do
