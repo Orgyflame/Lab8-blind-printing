@@ -3,7 +3,9 @@
 {$APPTYPE CONSOLE}
 {$R *.res}
 
-uses Windows;
+uses Windows,
+  System.SysUtils,
+  System.Math;
 
 const
   MAX_LENGTH = 15;
@@ -19,12 +21,17 @@ type
     count: TCountArray;
   end;
 
-function min(a, b: integer): integer;
+  /// Возвращает случайное слово из словаря длины <= maxLength,
+  /// и при этом длина не может быть равна maxLength-1
+function chooseRandomWord(maxLength: integer; dict: TDict): string;
+var
+  length: integer;
 begin
-  if a < b then
-    result := a
-  else
-    result := b;
+  repeat
+    length := random(min(MAX_LENGTH, maxLength)) + 1;
+  until not(length + 1 = maxLength);
+
+  result := dict.words[length][random(dict.count[length]) + 1];
 end;
 
 function generateString(stringLength: integer; dict: TDict): string;
@@ -32,23 +39,14 @@ var
   wordLength: integer;
   word: string;
 begin
-  result := '';
+  result := chooseRandomWord(stringLength, dict);
 
-  writeln(random(0));
-  repeat
+  while result.length < stringLength do
+  begin
+    word := chooseRandomWord(stringLength - result.length - 1, dict);
 
-    repeat
-      wordLength := random(min(MAX_LENGTH, stringLength - length(result) - 1)) + 1;
-    until not(length(result) + 1 + wordLength + 1 = stringLength);
-
-
-    word := dict.words[wordLength][random(dict.count[wordLength]) + 1];
-
-    if length(result) = 0 then
-      result := word
-    else
-      result := result + ' ' + word;
-  until length(result) = stringLength;
+    result := result + ' ' + word;
+  end;
 end;
 
 function readDict(filePath: string): TDict;
@@ -61,7 +59,7 @@ begin
   reset(f);
 
   for i := 1 to MAX_LENGTH do
-     result.count[i] := 0;
+    result.count[i] := 0;
 
   while (not EOF(f)) do
   begin
@@ -83,21 +81,22 @@ var
 begin
   SetConsoleCP(1251);
   SetConsoleOutputCP(1251);
+  randomize;
   dict := readDict('../../../dict-en.txt');
   // 'C:\Универ\Lab8-blind-printing\dict-en.txt'
-  for i := 1 to MAX_LENGTH do
+  for i := 1 to 100 do
   begin
-//    if dict.count[i] = 0 then
-//      writeln(i);
+    // if dict.count[i] = 0 then
+    // writeln(i);
 
-//    writeln(i);
-//    for j := 1 to dict.count[i] do
-//    begin
-//      write(dict.words[i, j], ' ');
-//    end;
-//    writeln;
+    // writeln(i);
+    // for j := 1 to dict.count[i] do
+    // begin
+    // write(dict.words[i, j], ' ');
+    // end;
+    // writeln;
 
-  writeln(generateString(i, dict));
+    writeln(i, ': ', generateString(i, dict));
   end;
   Readln;
 
