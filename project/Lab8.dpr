@@ -94,6 +94,9 @@ var
   state: boolean;
   i, wordsAmount: integer;
 begin
+  for i := 1 to MAX_LENGTH do begin
+    result[i] := '';
+  end;
   wordsAmount := 0;
   state := false;
   for i := 1 to length(str) do begin
@@ -118,11 +121,13 @@ function joinBy(words: TWordsArray; separator: char): string;
 var
   i: integer;
 begin
+  result := '';
   i := 1;
   while (i <= MAX_LENGTH) and (words[i] <> '') do begin
     result := result + words[i] + separator;
     inc(i);
   end;
+  delete(result, length(result), 1);
 end;
 
 
@@ -195,6 +200,7 @@ var originalWords, userWords, answerArray: TWordsArray;
 i, j, k: integer;
 equals, equalsAll: boolean;
 begin
+  result := '';
   originalWords := splitBy(originalString, ' ');
   userWords := splitBy(userString, ' ');
   equalsAll := true;
