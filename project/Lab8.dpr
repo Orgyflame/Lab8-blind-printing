@@ -10,6 +10,7 @@ uses Windows,
 const
   MAX_LENGTH = 15;
   MAX_COUNT = 1000;
+  WINDOW_LENGTH = 50;
 
 type
   TDictArray = array [1 .. MAX_LENGTH, 1 .. MAX_COUNT] of string;
@@ -34,6 +35,32 @@ begin
   cursor.Y := 0;
   FillConsoleOutputCharacter(GetStdHandle(STD_OUTPUT_HANDLE), ' ', 80 * r, cursor, r);
   SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), cursor);
+end;
+
+
+
+function showGameInterface(lang: TLanguage; level: integer; originalString: string): string;
+begin
+  if lang = en then
+    writeln('(LEVEL ', level, ') Try to repeat this phrase:')
+  else
+    writeln('(УРОВЕНЬ ', level, ') Попытайтесь повторить эту фразу:');
+  writeln(originalString);
+  readln(result);
+  clearConsole();
+end;
+
+
+
+function spaceWork(str: string): string;
+begin
+  result := str;
+  while (length(result) > 0) and (result[1] = ' ') do begin
+    delete(result, 1, 1);
+  end;
+  while (length(result) > 0) and (result[length(result)] = ' ') do begin
+    delete(result, length(result), 1);
+  end;
 end;
 
 
@@ -163,9 +190,9 @@ end;
 
 
 
-function generateNextString(originalString: string; userString: string; dict: TDict): string;
+function generateNextString(originalString: string; userString: string; dict: TDict; duplicateCount: integer): string;
 var originalWords, userWords, answerArray: TWordsArray;
-i, j: integer;
+i, j, k: integer;
 equals, equalsAll: boolean;
 begin
   originalWords := splitBy(originalString, ' ');
@@ -177,7 +204,9 @@ begin
     for j := 1 to length(originalWords[i]) do begin
       if (j > length(userWords[i])) or (userWords[i, j] <> originalWords[i, j]) then begin
         equals := false;
-        answerArray[i] := answerArray[i] + originalWords[i, j] + originalWords[i, j];
+        for k := 1 to duplicateCount do begin
+          answerArray[i] := answerArray[i] + originalWords[i, j];
+        end;
       end else begin
         answerArray[i] := answerArray[i] + originalWords[i, j];
       end;
@@ -208,13 +237,19 @@ end;
 //  s: string;
 //  words: TWordsArray;
 
+var
+  lang: TLanguage;
+  gameClosed, gameEnd, win: boolean;
+  level, duplicateCount: integer;
+  originalString, userString: string;
+  dict: TDict;
 
 begin
-//  SetConsoleCP(1251);
-//  SetConsoleOutputCP(1251);
-//  randomize;
+  SetConsoleCP(1251);
+  SetConsoleOutputCP(1251);
+  randomize;
 //  readLanguage();
-//  dict := readDict('../../../dict-en.txt');
+
 //  // 'C:\Универ\Lab8-blind-printing\dict-en.txt'
 //  for i := 1 to 100 do
 //  begin
@@ -232,6 +267,80 @@ begin
 //  end;
 ////  words := splitBy(s, ':');
 ////  writeln(joinBy(words, ' '));
-//  writeln(generateNextString('True Word', 'Truu word', dict));
+//  writeln(generateNextString('True Word', 'Truu word', dict, 4));
+//  s := spaceWork(' dasdasdas dfdsf ');
 //  Readln;
+  writeln('ТРЕНАЖОР ДЛЯ СЛЕПОЙ ПЕЧАТИ');
+  writeln('Введите Enter, чтобы продолжить');
+  readln;
+  lang := readLanguage();
+  if lang = en then
+    dict := readDict('../../../dict-en.txt')
+  else
+    dict := readDict('../../../dict-ru.txt');
+  clearConsole();
+  gameClosed := false;
+  level := 0;
+  win := false;
+  while not gameClosed do begin
+    if win then begin
+      inc(level);
+    end else begin
+      level := 1;
+    end;
+    originalString := generateString(20, dict);
+    gameEnd := false;
+    while not gameEnd do begin
+      userString := showGameInterface(lang, level, originalString);
+      userString := spaceWork(userString);
+      if userString = '13' then begin
+        gameClosed := true;
+        gameEnd := true;
+        if lang = en then
+        begin
+          writeln('The game is closed');
+          writeln('Press Enter to continue');
+        end
+        else
+        begin
+          writeln('Игра закрыта');
+          writeln('Введите Enter, чтобы продолжить');
+        end;
+      end
+      else begin
+        originalString := generateNextString(originalString, userString, dict, level * 2);
+        if originalString = '' then begin
+          gameEnd := true;
+          win := true;
+          if lang = en then
+          begin
+            writeln('You win the level!');
+            writeln('Press Enter to continue');
+          end
+          else
+          begin
+            writeln('Вы выиграли в уровне!');
+            writeln('Введите Enter, чтобы продолжить');
+          end;
+        end;
+        if length(originalString) > WINDOW_LENGTH then begin
+          gameEnd := true;
+          win := false;
+          if lang = en then
+          begin
+            writeln('You lost the level :(');
+            writeln('Press Enter to continue');
+          end
+          else
+          begin
+            writeln('Вы проиграли в уровне :(');
+            writeln('Введите Enter, чтобы продолжить');
+          end;
+        end;
+      end;
+    end;
+    readln;
+    clearConsole();
+  end;
+
 end.
